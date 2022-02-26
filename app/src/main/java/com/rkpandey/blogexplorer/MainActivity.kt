@@ -11,7 +11,7 @@ import com.rkpandey.blogexplorer.databinding.ActivityMainBinding
 import com.rkpandey.blogexplorer.models.Post
 
 private const val TAG = "MainActivity"
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), BlogPostAdapter.ItemClickListener {
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
     private lateinit var blogPostAdapter: BlogPostAdapter
@@ -22,17 +22,26 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+        viewModel.posts.observe(this, Observer {    posts->
+            Log.i(TAG, "Number of posts: ${posts.size}")
+            blogPosts.addAll(posts)
+            blogPostAdapter.notifyDataSetChanged()
+        })
         viewModel.isLoading.observe(this, Observer { isLoading ->
             Log.i(TAG, "isLoading $isLoading")
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         })
 
-        blogPostAdapter = BlogPostAdapter(this, blogPosts)
+        blogPostAdapter = BlogPostAdapter(this, blogPosts, this)
         binding.rvPosts.adapter = blogPostAdapter
         binding.rvPosts.layoutManager = LinearLayoutManager(this)
 
         binding.button.setOnClickListener {
             viewModel.getPosts()
         }
+    }
+
+    override fun onItemClick(post: Post) {
+        print(post.id)
     }
 }
